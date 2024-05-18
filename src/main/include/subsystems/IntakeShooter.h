@@ -36,12 +36,12 @@ public:
  	void RunAnglePID() {
 		float currentAngle = GetAngle();
 		angleError = angleSetpoint - currentAngle;
-		am::limitDeg(angleError);
+		am::wrapDeg(angleError);
 		float output = angleError*P;
 		accumulator += angleError*I;
 		output += accumulator;
 		float angleChange = currentAngle - lastAngle;
-		am::limitDeg(angleChange);
+		am::wrapDeg(angleChange);
 		output -= angleChange*D;
 		output += F;
 		if (output > max) {

@@ -3,103 +3,74 @@
 #include <AHRS.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "subsystems/SwerveModule.h"
+#include "constants.h"
 
 using namespace std;
 
 class Swerve{
 public:
-    complex<float> pos = complex<float>(0, 0);
-    complex<float> posChange = complex<float>(0, 0);
-    float angle;
-
-    complex<float> posSetpoint = complex<float>(0, 0);
-    complex<float> posError = complex<float>(0, 0);
-    float posP = 0.02;
-    // float angleSetpoint;
-
-    complex<float> currentVelocity;
-    float currentTurnRate = 0;
-    complex<float> targetVelocity;
-
-    const float slewRate = 0.04;
-    void set(complex<float> velocity, float turnRate, bool noAcceleration = false){
-        angle = -gyro.GetYaw()*(M_PI/180);
-        targetVelocity = velocity;
-
+    complex<float> position = complex<float>(0, 0); // current position of the robot
+    float position_P = 0.02;         // position proportional response rate
+    float heading_P = 0.3;           // heading proportional response rate
+    complex<float> current_velocity; // current velocity the swerve is set to in teleop
+    float current_turn_rate = 0;     // current turn rate of the swerve in teleop
+    
+    // drives robot at given speed during teleop
+    void set(complex<float> velocity, float turn_rate){
+        float heading = -gyro.GetYaw()*(M_PI/180);
+        complex<float> target_velocity = velocity;
         // robot orient the velocity
-        velocity *= polar<float>(1, -angle);
-
+        velocity *= polar<float>(1, -heading);
         // find fastest module speed
         float fastest = 1;
         for (Module module : modules){
-            float speed = abs(module.getVelocity(velocity, turnRate));
+            float speed = abs(module.getVelocity(velocity, turn_rate));
             if (speed > fastest){
                 fastest = speed;
             }
         }
         // move current velocity toward target
-        targetVelocity /= fastest;
-        turnRate /= fastest;
-        complex<float> velError = targetVelocity-currentVelocity;
-        float turnRateError = turnRate - currentTurnRate;
-        if (abs(velError) > slewRate) {
-            velError *= slewRate/abs(velError);
+        target_velocity /= fastest;
+        turn_rate /= fastest;
+        complex<float> velocity_error = target_velocity-current_velocity;
+        float turn_rate_error = turn_rate - current_turn_rate;
+        if (abs(velocity_error) > constants::slew_rate) {
+            velocity_error *= constants::slew_rate/abs(velocity_error);
         }
-        if (abs(turnRateError) > slewRate) {
-            turnRateError *= slewRate/abs(turnRateError);
+        if (abs(turn_rate_error) > constants::slew_rate) {
+            turn_rate_error *= constants::slew_rate/abs(turn_rate_error);
         }
-        currentVelocity += velError;
-        currentTurnRate += turnRateError;
-        targetVelocity = currentVelocity * polar<float>(1, -angle);
-
-        // calculate odometry
-        posChange = complex<float>(0, 0);
+        current_velocity += velocity_error;
+        current_turn_rate += turn_rate_error;
+        // robot orient velocity
+        target_velocity = current_velocity * polar<float>(1, -heading);
+        // calculate odometry and drive the modules
+        complex<float> position_change = complex<float>(0, 0);
         for (Module module : modules) {
-            module.set(targetVelocity, currentTurnRate);
-            posChange += module.getPositionChange();
+            module.set(target_velocity, current_turn_rate);
+            position_change += module.getPositionChange();
         }
-        pos += posChange * polar<float>(0.25, angle);
+        position += position_change * polar<float>(0.25, heading);
     }
 
-    float GetTurnRateOffset(float setpointAngle) {
-        float output = setpointAngle - angle;
-        am::limit(output);
-        return output * 0.3;
-    }
-
-    void SetPosition(complex<float> position){
-        posSetpoint = position;
-    }
-
-    bool GetPositionReached(float tolerance = 1) {
-        return abs(posError) < tolerance;
-    }
-
-    // drive toward the position setpoint
-    void RunPID(float tx) {
-        // calculate PID Response
-        angle = -gyro.GetYaw()*(M_PI/180);
-        posError = posSetpoint-pos;
-        complex<float> posPIDoutput = posP*posError;
-        float turnRate = -tx / 100;
-        // limit output
-        if (abs(posPIDoutput) > 0.3) {
-            posPIDoutput *= 0.3 / abs(posPIDoutput);
-        }
-        if (abs(turnRate) > 0.3) {
-            turnRate *= 0.3 / abs(turnRate);
-        }
-        if (abs(posError) < 0.5) {
-            posPIDoutput = complex<float>(0,0);
-        }
-        posPIDoutput *= polar<float>(1, -angle);
-        // calculate odometry
-        posChange = complex<float>(0, 0);
+    // drive toward the position setpoint with feedforward
+    void SetPose(complex<float> position_setpoint, float heading_setpoint, complex<float> velocity, float angular_velocity) {
+        // calculate proporional response
+        float heading = -gyro.GetYaw()*(M_PI/180);
+        complex<float> position_error = position_setpoint - position;
+        float heading_error = heading_setpoint - heading;
+        am::wrap(heading_error);
+        velocity += position_P * position_error;
+        angular_velocity += heading_P * heading_error;
+        //robot orient the output
+        velocity *= polar<float>(1, -heading);
+        // calculate odometry and drive modules
+        complex<float> position_change = complex<float>(0, 0);
         for (Module module : modules){
-            module.set(posPIDoutput, turnRate);
-            posChange += module.getPositionChange();
+            module.set(velocity, angular_velocity);
+            position_change += module.getPositionChange();
         }
-        pos += posChange * polar<float>(0.25, angle);
+        position += position_change * polar<float>(0.25, heading);
     }
 
     void init(){
@@ -108,11 +79,11 @@ public:
         }
     }
 
-    void resetPos() {
+    void resetPos(complex<float> new_position = complex<float>(0,0)) {
         for (Module module : modules) {
             module.resetEncoders();
         }
-        pos = complex<float>(0,0);
+        position = new_position;
     }
 
     complex<float> GetModulePosChange(int i) {
@@ -127,8 +98,8 @@ public:
         return modules[i].getMotorPos();
     }
 
-    float GetAngle() {
-        return gyro.GetAngle();
+    float GetHeading() {
+        return gyro.GetYaw();
     }
 
 private:

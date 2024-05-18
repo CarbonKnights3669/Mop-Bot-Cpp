@@ -2,7 +2,8 @@
 
 #include <math.h>
 namespace am{
-    void limit(float &angle){
+    // wrap input to between -pi and pi
+    void wrap(float &angle){
         while (angle > M_PI){
             angle -= M_PI*2;
         }
@@ -10,7 +11,9 @@ namespace am{
             angle += M_PI*2;
         }
     }
-    void limitDeg(float &angle) {
+
+    // wrap input to between -180 and 180
+    void wrapDeg(float &angle) {
         while (angle > 180){
             angle -= 360;
         }
