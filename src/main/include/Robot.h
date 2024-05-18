@@ -6,6 +6,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <complex.h>
 #include <frc/Timer.h>
+#include <frc/Filesystem.h>
 #include <string.h>
 #include "cameraserver/CameraServer.h"
 
@@ -23,7 +24,7 @@ frc::Timer autonomousTimer;
 
 class Robot : public frc::TimedRobot{
 public:
-	
+	vector<trajectoryMaker::Sample> trajectory;
 
 	void RobotInit() override;
 	void RobotPeriodic() override;

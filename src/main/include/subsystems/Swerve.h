@@ -3,7 +3,7 @@
 #include <AHRS.h>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "subsystems/SwerveModule.h"
-#include "constants.h"
+#include "trajectoryMaker.h"
 
 using namespace std;
 
@@ -11,7 +11,7 @@ class Swerve{
 public:
     complex<float> position = complex<float>(0, 0); // current position of the robot
     float position_P = 0.02;         // position proportional response rate
-    float heading_P = 0.3;           // heading proportional response rate
+    float heading_P = 1.5;           // heading proportional response rate
     complex<float> current_velocity; // current velocity the swerve is set to in teleop
     float current_turn_rate = 0;     // current turn rate of the swerve in teleop
     
@@ -22,7 +22,7 @@ public:
         // robot orient the velocity
         velocity *= polar<float>(1, -heading);
         // find fastest module speed
-        float fastest = 1;
+        float fastest = 4;
         for (Module module : modules){
             float speed = abs(module.getVelocity(velocity, turn_rate));
             if (speed > fastest){
@@ -30,7 +30,7 @@ public:
             }
         }
         // move current velocity toward target
-        target_velocity /= fastest;
+        target_velocity *= 4 / fastest;
         turn_rate /= fastest;
         complex<float> velocity_error = target_velocity-current_velocity;
         float turn_rate_error = turn_rate - current_turn_rate;
@@ -54,20 +54,20 @@ public:
     }
 
     // drive toward the position setpoint with feedforward
-    void SetPose(complex<float> position_setpoint, float heading_setpoint, complex<float> velocity, float angular_velocity) {
+    void SetPose(trajectoryMaker::Sample sample) {
         // calculate proporional response
         float heading = -gyro.GetYaw()*(M_PI/180);
-        complex<float> position_error = position_setpoint - position;
-        float heading_error = heading_setpoint - heading;
+        complex<float> position_error = sample.position - position;
+        float heading_error = sample.heading - heading;
         am::wrap(heading_error);
-        velocity += position_P * position_error;
-        angular_velocity += heading_P * heading_error;
+        sample.velocity += position_P * position_error;
+        sample.angular_velocity += heading_P * heading_error;
         //robot orient the output
-        velocity *= polar<float>(1, -heading);
+        sample.velocity *= polar<float>(1, -heading);
         // calculate odometry and drive modules
-        complex<float> position_change = complex<float>(0, 0);
+        complex<float> position_change;
         for (Module module : modules){
-            module.set(velocity, angular_velocity);
+            module.set(sample.velocity, sample.angular_velocity);
             position_change += module.getPositionChange();
         }
         position += position_change * polar<float>(0.25, heading);

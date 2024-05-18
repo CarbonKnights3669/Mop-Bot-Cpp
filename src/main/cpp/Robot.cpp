@@ -13,14 +13,25 @@ void Robot::RobotInit()
 {
 	intakeShooter.init();
 	swerve.init();
+	trajectory = trajectoryMaker::MakeTrajectory(frc::filesystem::GetDeployDirectory() + "/test.traj");
 	// Creates UsbCamera and MjpegServer [1] and connects them
 	//frc::CameraServer::StartAutomaticCapture();
 	//frc::CameraServer::PutVideo("Blur", 640, 480);
 }
 void Robot::RobotPeriodic() {}
 
-void Robot::AutonomousInit() {}
+void Robot::AutonomousInit() {
+	autonomousTimer.Restart();
+}
 void Robot::AutonomousPeriodic() {
+	while (trajectory[i].timestamp < float(autonomousTimer.Get()) && i < trajectory.size()) {
+		swerve.SetPose(trajectory[i]);
+		i++;
+	}
+	if (i >= trajectory.size()) {
+		swerve.set(complex<float>(0,0), 0);
+	} 
+
 	frc::SmartDashboard::PutNumber("angle", intakeShooter.GetAngle());
 	frc::SmartDashboard::PutBoolean("note detected", intakeShooter.eye2.Get());
 	frc::SmartDashboard::PutNumber("posx", swerve.position.real());
@@ -44,7 +55,9 @@ void Robot::AutonomousPeriodic() {
 }
 
 void Robot::TeleopInit() {}
-void Robot::TeleopPeriodic(){}
+void Robot::TeleopPeriodic(){
+	swerve.set(complex<float>(-controller.GetLeftY(), -controller.GetLeftX()), -controller.GetRightX());
+}
 
 void Robot::DisabledInit() {}
 void Robot::DisabledPeriodic() {}
