@@ -44,7 +44,9 @@ public:
             module.set(target_velocity, current_turn_rate);
             position_change += module.getPositionChange();
         }
-        position += position_change * polar<double>(0.25F, heading);
+        position += position_change * polar<double>(1, heading) * 0.25;
+        frc::SmartDashboard::PutNumber("positionX", position.real());
+        frc::SmartDashboard::PutNumber("positionY", position.imag());
     }
 
     // drive toward the position setpoint with feedforward

@@ -7,6 +7,7 @@
 #include <string>
 #include "angleMath.h"
 #include "constants.h"
+#include "frc/smartdashboard/SmartDashboard.h"
 
 using namespace std;
 using namespace ctre::phoenix6;
@@ -61,8 +62,10 @@ public:
     void calculateOdometry() {
         motor_position = m_drive->GetPosition().GetValueAsDouble();
         motor_position_change = motor_position - motor_position_old;
-        position_change = polar<double>(motor_position_change / constants::rotations_per_meter, angle);
         motor_position_old = motor_position;
+        position_change = polar<double>(motor_position_change / constants::rotations_per_meter, angle);
+        frc::SmartDashboard::PutNumber("poschgx", position_change.real());
+        frc::SmartDashboard::PutNumber("poschgy", position_change.imag());
     }
 
     void resetEncoders() {
