@@ -31,32 +31,39 @@ void Robot::AutonomousPeriodic() {
 	if (i >= trajectory.size()) {
 		swerve.set(complex<float>(0,0), 0);
 	} 
-
-	frc::SmartDashboard::PutNumber("angle", intakeShooter.GetAngle());
-	frc::SmartDashboard::PutBoolean("note detected", intakeShooter.eye2.Get());
-	frc::SmartDashboard::PutNumber("posx", swerve.position.real());
-	frc::SmartDashboard::PutNumber("posy", swerve.position.imag());
-	frc::SmartDashboard::PutNumber("mod0Changex", swerve.GetModulePosChange(0).real());
-	frc::SmartDashboard::PutNumber("mod0Changey", swerve.GetModulePosChange(0).imag());
-	frc::SmartDashboard::PutNumber("mod1Changex", swerve.GetModulePosChange(1).real());
-	frc::SmartDashboard::PutNumber("mod1Changey", swerve.GetModulePosChange(1).imag());
-	frc::SmartDashboard::PutNumber("mod2Changex", swerve.GetModulePosChange(2).real());
-	frc::SmartDashboard::PutNumber("mod2Changey", swerve.GetModulePosChange(2).imag());
-	frc::SmartDashboard::PutNumber("mod3Changex", swerve.GetModulePosChange(3).real());
-	frc::SmartDashboard::PutNumber("mod3Changey", swerve.GetModulePosChange(3).imag());
-	frc::SmartDashboard::PutNumber("motor0Change", swerve.GetMotorPosChange(0));
-	frc::SmartDashboard::PutNumber("motor1Change", swerve.GetMotorPosChange(1));
-	frc::SmartDashboard::PutNumber("motor2Change", swerve.GetMotorPosChange(2));
-	frc::SmartDashboard::PutNumber("motor3Change", swerve.GetMotorPosChange(3));
-	frc::SmartDashboard::PutNumber("motor0Pos", swerve.GetMotorPos(0));
-	frc::SmartDashboard::PutNumber("motor1Pos", swerve.GetMotorPos(1));
-	frc::SmartDashboard::PutNumber("motor2Pos", swerve.GetMotorPos(2));
-	frc::SmartDashboard::PutNumber("motor3Pos", swerve.GetMotorPos(3));
+	frc::SmartDashboard::PutNumber("posx", swerve.GetPositionChange().real());
+	frc::SmartDashboard::PutNumber("posy", swerve.GetPositionChange().imag());
+	frc::SmartDashboard::PutNumber("motorPosChg1", swerve.GetMotorPosChange(0));
+	frc::SmartDashboard::PutNumber("motorPosChg2", swerve.GetMotorPosChange(1));
+	frc::SmartDashboard::PutNumber("motorPosChg3", swerve.GetMotorPosChange(2));
+	frc::SmartDashboard::PutNumber("motorPosChg4", swerve.GetMotorPosChange(3));
+	frc::SmartDashboard::PutNumber("motorPosChg1x", swerve.GetModulePosChange(0).real());
+	frc::SmartDashboard::PutNumber("motorPosChg1y", swerve.GetModulePosChange(0).imag());
+	frc::SmartDashboard::PutNumber("motorPosChg2x", swerve.GetModulePosChange(1).real());
+	frc::SmartDashboard::PutNumber("motorPosChg2y", swerve.GetModulePosChange(1).imag());
+	frc::SmartDashboard::PutNumber("motorPosChg3x", swerve.GetModulePosChange(2).real());
+	frc::SmartDashboard::PutNumber("motorPosChg3y", swerve.GetModulePosChange(2).imag());
+	frc::SmartDashboard::PutNumber("motorPosChg4x", swerve.GetModulePosChange(3).real());
+	frc::SmartDashboard::PutNumber("motorPosChg4y", swerve.GetModulePosChange(3).imag());
 }
 
 void Robot::TeleopInit() {}
 void Robot::TeleopPeriodic(){
 	swerve.set(complex<float>(-controller.GetLeftY(), -controller.GetLeftX()), -controller.GetRightX());
+	frc::SmartDashboard::PutNumber("posx", swerve.GetPositionChange().real());
+	frc::SmartDashboard::PutNumber("posy", swerve.GetPositionChange().imag());
+	frc::SmartDashboard::PutNumber("motorPosChg1", swerve.GetMotorPosChange(0));
+	frc::SmartDashboard::PutNumber("motorPosChg2", swerve.GetMotorPosChange(1));
+	frc::SmartDashboard::PutNumber("motorPosChg3", swerve.GetMotorPosChange(2));
+	frc::SmartDashboard::PutNumber("motorPosChg4", swerve.GetMotorPosChange(3));
+	frc::SmartDashboard::PutNumber("motorPosChg1x", swerve.GetModulePosChange(0).real());
+	frc::SmartDashboard::PutNumber("motorPosChg1y", swerve.GetModulePosChange(0).imag());
+	frc::SmartDashboard::PutNumber("motorPosChg2x", swerve.GetModulePosChange(1).real());
+	frc::SmartDashboard::PutNumber("motorPosChg2y", swerve.GetModulePosChange(1).imag());
+	frc::SmartDashboard::PutNumber("motorPosChg3x", swerve.GetModulePosChange(2).real());
+	frc::SmartDashboard::PutNumber("motorPosChg3y", swerve.GetModulePosChange(2).imag());
+	frc::SmartDashboard::PutNumber("motorPosChg4x", swerve.GetModulePosChange(3).real());
+	frc::SmartDashboard::PutNumber("motorPosChg4y", swerve.GetModulePosChange(3).imag());
 }
 
 void Robot::DisabledInit() {}

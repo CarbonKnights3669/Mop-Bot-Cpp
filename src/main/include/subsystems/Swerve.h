@@ -9,31 +9,25 @@ using namespace std;
 
 class Swerve{
 public:
-    complex<float> position = complex<float>(0, 0); // current position of the robot
-    float position_P = 0.02;         // position proportional response rate
-    float heading_P = 1.5;           // heading proportional response rate
-    complex<float> current_velocity; // current velocity the swerve is set to in teleop
-    float current_turn_rate = 0;     // current turn rate of the swerve in teleop
     
     // drives robot at given speed during teleop
     void set(complex<float> velocity, float turn_rate){
-        float heading = -gyro.GetYaw()*(M_PI/180);
-        complex<float> target_velocity = velocity;
+        heading = -gyro.GetYaw()*(M_PI/180);
+        target_velocity = velocity;
         // robot orient the velocity
         velocity *= polar<float>(1, -heading);
         // find fastest module speed
-        float fastest = 4;
+        fastest = 4;
         for (Module module : modules){
-            float speed = abs(module.getVelocity(velocity, turn_rate));
-            if (speed > fastest){
-                fastest = speed;
-            }
+            module_speed = abs(module.getVelocity(velocity, turn_rate));
+            if (module_speed > fastest)
+                fastest = module_speed;
         }
         // move current velocity toward target
         target_velocity *= 4 / fastest;
         turn_rate /= fastest;
-        complex<float> velocity_error = target_velocity-current_velocity;
-        float turn_rate_error = turn_rate - current_turn_rate;
+        velocity_error = target_velocity-current_velocity;
+        turn_rate_error = turn_rate - current_turn_rate;
         if (abs(velocity_error) > constants::slew_rate) {
             velocity_error *= constants::slew_rate/abs(velocity_error);
         }
@@ -45,32 +39,32 @@ public:
         // robot orient velocity
         target_velocity = current_velocity * polar<float>(1, -heading);
         // calculate odometry and drive the modules
-        complex<float> position_change = complex<float>(0, 0);
+        position_change = complex<float>(0,0);
         for (Module module : modules) {
             module.set(target_velocity, current_turn_rate);
             position_change += module.getPositionChange();
         }
-        position += position_change * polar<float>(0.25, heading);
+        position += position_change * polar<float>(0.25F, heading);
     }
 
     // drive toward the position setpoint with feedforward
     void SetPose(trajectoryMaker::Sample sample) {
         // calculate proporional response
-        float heading = -gyro.GetYaw()*(M_PI/180);
-        complex<float> position_error = sample.position - position;
-        float heading_error = sample.heading - heading;
+        heading = -gyro.GetYaw()*(M_PI/180);
+        position_error = sample.position - position;
+        heading_error = sample.heading - heading;
         am::wrap(heading_error);
         sample.velocity += position_P * position_error;
         sample.angular_velocity += heading_P * heading_error;
         //robot orient the output
         sample.velocity *= polar<float>(1, -heading);
         // calculate odometry and drive modules
-        complex<float> position_change;
+        position_change = complex<float>(0,0);
         for (Module module : modules){
             module.set(sample.velocity, sample.angular_velocity);
             position_change += module.getPositionChange();
         }
-        position += position_change * polar<float>(0.25, heading);
+        position += position_change * polar<float>(0.25F, heading);
     }
 
     void init(){
@@ -102,6 +96,14 @@ public:
         return gyro.GetYaw();
     }
 
+    complex<float> GetPosition() {
+        return position;
+    }
+
+    complex<float> GetPositionChange() {
+        return position_change;
+    }
+
 private:
     AHRS gyro{frc::SPI::Port::kMXP};
     Module modules[4] = {
@@ -111,4 +113,21 @@ private:
         Module{4, complex<float>(-1, -1)}
     };
 
+      // heading proportional response rate
+    complex<float> current_velocity; // current velocity the swerve is set to in teleop
+    float current_turn_rate = 0;     // current turn rate of the swerve in teleop
+    float heading;
+    complex<float> target_velocity;
+    complex<float> velocity_error;
+    float turn_rate_error;
+    float module_speed;
+    float fastest;
+
+
+    complex<float> position = complex<float>(0, 0); // current position of the robot
+    complex<float> position_change;
+    float position_P = 0.04;         // position proportional response rate
+    float heading_P = 3;
+    complex<float> position_error;
+    float heading_error;
 } swerve;
