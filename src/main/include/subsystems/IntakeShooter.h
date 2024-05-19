@@ -14,33 +14,33 @@ public:
 	frc::DigitalInput eye0{0};
 	frc::DigitalInput eye1{1};
     frc::DigitalInput eye2{2};
- 	void SetAngle(float angle) {
+ 	void SetAngle(double angle) {
 		this->angleSetpoint = angle;
  	}
-	void SetP(float P = 0.0125) {
+	void SetP(double P = 0.0125) {
 		this->P = P;
 	}
-	void SetI(float I = 0) {
+	void SetI(double I = 0) {
 		this->I = I;
 	}
-	void SetD(float D = 0) {
+	void SetD(double D = 0) {
 		this->D = D;
 	}
-	void SetF(float F = 0) {
+	void SetF(double F = 0) {
 		this->F = F;
 	}
-	void SetOutputRange(float min = -0.25, float max = 0.3) {
+	void SetOutputRange(double min = -0.25, double max = 0.3) {
 		this->max = max;
 		this->min = min;
 	}
  	void RunAnglePID() {
-		float currentAngle = GetAngle();
+		double currentAngle = GetAngle();
 		angleError = angleSetpoint - currentAngle;
 		am::wrapDeg(angleError);
-		float output = angleError*P;
+		double output = angleError*P;
 		accumulator += angleError*I;
 		output += accumulator;
-		float angleChange = currentAngle - lastAngle;
+		double angleChange = currentAngle - lastAngle;
 		am::wrapDeg(angleChange);
 		output -= angleChange*D;
 		output += F;
@@ -52,21 +52,21 @@ public:
 		}
 		m_angle.Set(output);
  	}
-	bool GetAngleReached(float tolerance = 2) {
+	bool GetAngleReached(double tolerance = 2) {
 		return abs(angleError) < tolerance;
 	}
-	void SetIntakeSpeed(float inPerSec) {
+	void SetIntakeSpeed(double inPerSec) {
 		intakePID.SetReference(inPerSec*60, rev::CANSparkMax::ControlType::kVelocity);
 	}
-    void SetIntake(float percent){
+    void SetIntake(double percent){
         m_intake.Set(percent/100);
     }
-	void SetShooterSpeed(float inPerSec) { 
+	void SetShooterSpeed(double inPerSec) { 
 		/* Use torque velocity */
 		m1_shooter.SetControl(s_velocity.WithVelocity(inPerSec/shooterIPR*1_tps).WithFeedForward(20_A));
 		m2_shooter.SetControl(s_velocity.WithVelocity(inPerSec/shooterIPR*1_tps).WithFeedForward(15_A));
 	}
-	void SetShooter(float speed) {
+	void SetShooter(double speed) {
 		m1_shooter.Set(speed/100);
 		m2_shooter.Set(speed/100);
 	}
@@ -117,16 +117,16 @@ public:
  	}
 	
 private:
-	float angleSetpoint = 15;
-	float angleError;
-	float lastAngle;
-	float accumulator = 0;
-	float P = 0.008;
-	float I = 0;
-	float D = 0;
-	float F = -0.015;
-	float max = 0.25;
-	float min = -0.25;
+	double angleSetpoint = 15;
+	double angleError;
+	double lastAngle;
+	double accumulator = 0;
+	double P = 0.008;
+	double I = 0;
+	double D = 0;
+	double F = -0.015;
+	double max = 0.25;
+	double min = -0.25;
 	rev::CANSparkMax m_intake{42, rev::CANSparkMax::MotorType::kBrushless};
 	rev::SparkPIDController intakePID = m_intake.GetPIDController();
 	rev::SparkRelativeEncoder e_intake = m_intake.GetEncoder(rev::SparkRelativeEncoder::Type::kHallSensor);
@@ -141,13 +141,13 @@ private:
 
 	frc::DutyCycleEncoder e_abs_angle{9};
 	
-	const float intakeGearboxReduction = 9;
+	const double intakeGearboxReduction = 9;
 	// inches per rotation of the intake motor
-	const float intakeIPR = M_PI*2/intakeGearboxReduction;
+	const double intakeIPR = M_PI*2/intakeGearboxReduction;
 	// inches per rotation of the shooter motors
-	const float shooterIPR = M_PI*4;
+	const double shooterIPR = M_PI*4;
 
-const float angleGearboxReduction = 60;
+const double angleGearboxReduction = 60;
 // degrees per rotation of the angle motor
-const float angleDPR = 360/angleGearboxReduction;
+const double angleDPR = 360/angleGearboxReduction;
 } intakeShooter;

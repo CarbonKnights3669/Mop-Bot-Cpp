@@ -12,10 +12,10 @@ namespace trajectoryMaker
 {
     struct Sample {
         double timestamp;
-        complex<float> position;
-        float heading;
-        complex<float> velocity;
-        float angular_velocity;
+        complex<double> position;
+        double heading;
+        complex<double> velocity;
+        double angular_velocity;
     };
 
     // Function to load JSON data into a vector of Sample structures
@@ -29,9 +29,9 @@ namespace trajectoryMaker
         for (const auto& item : jsonData["samples"]) {
             Sample sample;
             sample.timestamp = item["timestamp"].get<double>();
-            sample.position = complex<float>(item["x"].get<float>(), item["y"].get<float>());
-            sample.heading = item["heading"].get<float>();
-            sample.velocity = complex<float>(item["velocityX"].get<float>(), item["velocityY"].get<float>());
+            sample.position = complex<double>(item["x"].get<double>(), item["y"].get<double>());
+            sample.heading = item["heading"].get<double>();
+            sample.velocity = complex<double>(item["velocityX"].get<double>(), item["velocityY"].get<double>());
             sample.angular_velocity = item["angularVelocity"].get<double>();
             trajectory.push_back(sample);
         }
